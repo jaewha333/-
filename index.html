@@ -3,65 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <title>re:code</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* 아날로그 터미널 감성 디자인 */
-        body {
-            background-color: #ffffff; /* 화이트 배경 */
-            color: #1a1a1a;           /* 짙은 차콜색 글자 */
-            font-family: 'Courier New', Courier, monospace;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            margin: 0;
-            padding: 20px;
-            box-sizing: border-box;
-            line-height: 1.6;
-        }
-
-        #terminal {
-            flex-grow: 1;
-            overflow-y: auto;
-            white-space: pre-wrap;
-            margin-bottom: 20px;
-        }
-
-        .input-line {
-            display: flex;
-            border-top: 1px solid #eeeeee;
-            padding-top: 10px;
-        }
-
-        .prompt {
-            margin-right: 10px;
-            font-weight: bold;
-        }
-
-        input {
-            border: none;
-            outline: none;
-            background: transparent;
-            font-family: inherit;
-            font-size: inherit;
-            color: inherit;
-            flex-grow: 1;
-        }
-
-        /* 시스템 메시지 스타일 (아날로그 지연 연출용) */
-        .system-msg {
-            color: #888888;
-            font-size: 0.9em;
-            margin: 5px 0;
-        }
-
-        /* 커서 깜빡임 효과 */
-        .cursor {
-            display: inline-block;
-            width: 8px;
-            height: 15px;
-            background: #1a1a1a;
-            animation: blink 1s infinite;
-        }
-        @keyframes blink { 50% { opacity: 0; } }
+        /* (기존 CSS 스타일은 동일하므로 생략하지만 실제 파일엔 그대로 두세요) */
+        body { background-color: #ffffff; color: #1a1a1a; font-family: 'Courier New', monospace; padding: 20px; }
+        #terminal { flex-grow: 1; overflow-y: auto; white-space: pre-wrap; height: 80vh; margin-bottom: 20px; }
+        .input-line { display: flex; border-top: 1px solid #eeeeee; padding-top: 10px; }
+        input { border: none; outline: none; flex-grow: 1; font-family: inherit; font-size: inherit; }
     </style>
 </head>
 <body>
@@ -69,7 +17,7 @@
 <div id="terminal">
 [system] 365 days of breath.
 [system] every word will be reset in a year.
-<br></div>
+</div>
 
 <div class="input-line">
     <span class="prompt" id="prompt-text">ID:</span>
@@ -77,71 +25,79 @@
 </div>
 
 <script>
-    const terminal = document.getElementById('terminal');
-    const inputField = document.getElementById('user-input');
-    const promptText = document.getElementById('prompt-text');
+   // 1. 초기화 설정 (변수 이름을 _client로 바꿔서 충돌을 방지합니다)
+const SUPABASE_URL = 'https://hufeqvmeehdplnddmnnx.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_tPLJ5u4HDXQrsEJej51VSQ_CQsgct_T';
+// supabase.createClient 대신 아래처럼 선언해야 안전합니다.
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    let currentState = 'ID_INPUT'; // 상태: ID_INPUT -> PW_INPUT -> LOGGED_IN
-    let userId = '';
+const terminal = document.getElementById('terminal');
+const inputField = document.getElementById('user-input');
+const promptText = document.getElementById('prompt-text');
 
-    // 로그 메시지를 터미널에 추가하는 함수
-    function log(text, className = '') {
-        const div = document.createElement('div');
-        div.className = className;
-        div.innerText = text;
-        terminal.appendChild(div);
-        terminal.scrollTop = terminal.scrollHeight;
-    }
+let currentState = 'ID_INPUT'; 
+let userId = '';
 
-    // 3초 지연 로직 (아날로그 연결 시퀀스)
-    async function startConnecting() {
-        inputField.disabled = true;
-        log("\n[system] Searching for a soul...");
-        await new Promise(r => setTimeout(r, 1000));
-        log("[system] Bridging the gap to the memories...");
-        await new Promise(r => setTimeout(r, 1000));
-        log("[system] Connection established. Welcome.\n");
-        await new Promise(r => setTimeout(r, 1000));
+// 로그 출력 함수
+function log(text) {
+    const div = document.createElement('div');
+    div.innerText = text;
+    terminal.appendChild(div);
+    terminal.scrollTop = terminal.scrollHeight;
+}
+
+// 엔터 키 이벤트 리스너 (keypress 대신 keydown 사용이 더 정확합니다)
+inputField.addEventListener('keydown', async (e) => {
+    // 한글 입력 시 엔터가 두 번 입력되는 현상 방지
+    if (e.isComposing) return; 
+
+    if (e.key === 'Enter') {
+        const value = inputField.value.trim();
         
-        inputField.disabled = false;
-        inputField.value = "";
-        promptText.innerText = "@" + userId + ":";
-        log("--- 오늘의 기록을 시작하세요 (365일 뒤 삭제됩니다) ---");
-        currentState = 'LOGGED_IN';
-        inputField.focus();
-    }
+        // 1. ID 입력 단계
+        if (currentState === 'ID_INPUT') {
+            if (!value) return; 
+            userId = value;
+            log("ID: " + userId);
+            inputField.value = ""; 
+            promptText.innerText = "PW:"; 
+            currentState = 'PW_INPUT';
+        } 
+        
+        // 2. PW 입력 단계
+        else if (currentState === 'PW_INPUT') {
+            log("PW: ********");
+            inputField.value = "";
+            inputField.disabled = true;
 
-    inputField.addEventListener('keydown', async (e) => {
-        if (e.key === 'Enter') {
-            const value = inputField.value.trim();
-            if (!value && currentState !== 'LOGGED_IN') return;
-
-            if (currentState === 'ID_INPUT') {
-                userId = value;
-                log("ID: " + userId);
-                inputField.value = "";
-                promptText.innerText = "PW:";
-                currentState = 'PW_INPUT';
-
-            } else if (currentState === 'PW_INPUT') {
-                log("PW: ********");
-                await startConnecting();
-
-            } else if (currentState === 'LOGGED_IN') {
-                // 일기 작성 모드
-                if (value === '?') {
-                    // 랜덤 호출 명령어 시뮬레이션
-                    log("\n[system] Finding a random fragment...");
-                    await new Promise(r => setTimeout(r, 2000));
-                    log("> 누군가의 일기: \"오늘은 바람이 차다. 누군가 내 글을 읽고 있을까?\"");
-                    log("> 작성자: @re:unknown\n");
-                } else {
-                    log(value); // 화면에 글 출력
-                }
-                inputField.value = "";
-            }
+            // 3초 지연 연출
+            log("\n[system] Searching for a soul...");
+            await new Promise(r => setTimeout(r, 1000));
+            log("[system] Bridging the gap to the memories...");
+            await new Promise(r => setTimeout(r, 1000));
+            log("[system] Connection established. Welcome.\n");
+            
+            promptText.innerText = "@" + userId + ":";
+            currentState = 'LOGGED_IN';
+            inputField.disabled = false;
+            inputField.focus();
+        } 
+        
+        // 3. 로그인 후 일기 작성 단계
+        else if (currentState === 'LOGGED_IN') {
+            if (!value) return;
+            log(value);
+            inputField.value = "";
+            
+            // DB 저장 실행 (변수명 수정됨)
+            const { error } = await supabaseClient
+                .from('entries')
+                .insert([{ user_id: userId, content: value }]);
+            
+            if (error) console.error("저장 오류:", error);
         }
-    });
+    }
+});
 </script>
 </body>
 </html>
