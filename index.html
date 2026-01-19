@@ -27,7 +27,7 @@
 <script>
    // 1. 초기화 설정 (변수 이름을 _client로 바꿔서 충돌을 방지합니다)
 const SUPABASE_URL = 'https://hufeqvmeehdplnddmnnx.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_tPLJ5u4HDXQrsEJej51VSQ_CQsgct_T';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh1ZmVxdm1lZWhkcGxuZGRtbm54Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg3OTAwMDAsImV4cCI6MjA4NDM2NjAwMH0.ABnSOofJZ_CRTefgTK5Os2jOzSXyhzAohzvfN2X8VIY';
 // supabase.createClient 대신 아래처럼 선언해야 안전합니다.
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -101,3 +101,4 @@ inputField.addEventListener('keydown', async (e) => {
 </script>
 </body>
 </html>
+
