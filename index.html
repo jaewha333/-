@@ -84,21 +84,26 @@ inputField.addEventListener('keydown', async (e) => {
         } 
         
         // 3. 로그인 후 일기 작성 단계
-        else if (currentState === 'LOGGED_IN') {
-            if (!value) return;
-            log(value);
-            inputField.value = "";
-            
-            // DB 저장 실행 (변수명 수정됨)
-            const { error } = await supabaseClient
-                .from('entries')
-                .insert([{ user_id: userId, content: value }]);
-            
-            if (error) console.error("저장 오류:", error);
-        }
+       else if (currentState === 'LOGGED_IN') {
+    if (!value) return;
+    log(">> " + value);
+    inputField.value = "";
+    
+    // DB 저장 시도
+    const { data, error } = await supabaseClient
+        .from('entries')
+        .insert([{ user_id: userId, content: value }]);
+
+    if (error) {
+        // 이 메시지가 화면에 뜨면 저에게 알려주세요!
+        alert("에러 발생: " + error.message); 
+        console.error(error);
+    } else {
+        log("[system] Saved to database.");
     }
 });
 </script>
 </body>
 </html>
+
 
