@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>re:code</title>
+    <style>
+        /* 아날로그 터미널 감성 디자인 */
+        body {
+            background-color: #ffffff; /* 화이트 배경 */
+            color: #1a1a1a;           /* 짙은 차콜색 글자 */
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            line-height: 1.6;
+        }
+
+        #terminal {
+            flex-grow: 1;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            margin-bottom: 20px;
+        }
+
+        .input-line {
+            display: flex;
+            border-top: 1px solid #eeeeee;
+            padding-top: 10px;
+        }
+
+        .prompt {
+            margin-right: 10px;
+            font-weight: bold;
+        }
+
+        input {
+            border: none;
+            outline: none;
+            background: transparent;
+            font-family: inherit;
+            font-size: inherit;
+            color: inherit;
+            flex-grow: 1;
+        }
+
+        /* 시스템 메시지 스타일 (아날로그 지연 연출용) */
+        .system-msg {
+            color: #888888;
+            font-size: 0.9em;
+            margin: 5px 0;
+        }
+
+        /* 커서 깜빡임 효과 */
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 15px;
+            background: #1a1a1a;
+            animation: blink 1s infinite;
+        }
+        @keyframes blink { 50% { opacity: 0; } }
+    </style>
+</head>
+<body>
+
+<div id="terminal">
+[system] 365 days of breath.
+[system] every word will be reset in a year.
+<br></div>
+
+<div class="input-line">
+    <span class="prompt" id="prompt-text">ID:</span>
+    <input type="text" id="user-input" autofocus autocomplete="off">
+</div>
+
+<script>
+    const terminal = document.getElementById('terminal');
+    const inputField = document.getElementById('user-input');
+    const promptText = document.getElementById('prompt-text');
+
+    let currentState = 'ID_INPUT'; // 상태: ID_INPUT -> PW_INPUT -> LOGGED_IN
+    let userId = '';
+
+    // 로그 메시지를 터미널에 추가하는 함수
+    function log(text, className = '') {
+        const div = document.createElement('div');
+        div.className = className;
+        div.innerText = text;
+        terminal.appendChild(div);
+        terminal.scrollTop = terminal.scrollHeight;
+    }
+
+    // 3초 지연 로직 (아날로그 연결 시퀀스)
+    async function startConnecting() {
+        inputField.disabled = true;
+        log("\n[system] Searching for a soul...");
+        await new Promise(r => setTimeout(r, 1000));
+        log("[system] Bridging the gap to the memories...");
+        await new Promise(r => setTimeout(r, 1000));
+        log("[system] Connection established. Welcome.\n");
+        await new Promise(r => setTimeout(r, 1000));
+        
+        inputField.disabled = false;
+        inputField.value = "";
+        promptText.innerText = "@" + userId + ":";
+        log("--- 오늘의 기록을 시작하세요 (365일 뒤 삭제됩니다) ---");
+        currentState = 'LOGGED_IN';
+        inputField.focus();
+    }
+
+    inputField.addEventListener('keydown', async (e) => {
+        if (e.key === 'Enter') {
+            const value = inputField.value.trim();
+            if (!value && currentState !== 'LOGGED_IN') return;
+
+            if (currentState === 'ID_INPUT') {
+                userId = value;
+                log("ID: " + userId);
+                inputField.value = "";
+                promptText.innerText = "PW:";
+                currentState = 'PW_INPUT';
+
+            } else if (currentState === 'PW_INPUT') {
+                log("PW: ********");
+                await startConnecting();
+
+            } else if (currentState === 'LOGGED_IN') {
+                // 일기 작성 모드
+                if (value === '?') {
+                    // 랜덤 호출 명령어 시뮬레이션
+                    log("\n[system] Finding a random fragment...");
+                    await new Promise(r => setTimeout(r, 2000));
+                    log("> 누군가의 일기: \"오늘은 바람이 차다. 누군가 내 글을 읽고 있을까?\"");
+                    log("> 작성자: @re:unknown\n");
+                } else {
+                    log(value); // 화면에 글 출력
+                }
+                inputField.value = "";
+            }
+        }
+    });
+</script>
+</body>
+</html>
